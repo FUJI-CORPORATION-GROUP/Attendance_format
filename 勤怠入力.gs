@@ -17,19 +17,24 @@ function roundUpTo15Minutes(date) {
 }
 
 function mainButton() {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var tableRange = sheet.getRange('B2'); // テーブルの最初のセル
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var tableRangeB9 = sheet.getRange('B9'); // テーブルの最初のセル
+  var tableRangeB10 = sheet.getRange('B10'); // テーブルの最初のセル
 
-  if (tableRange.getValue()) {
-    startTimeData();
+  if (tableRangeB10.getValue()) {
+    if (tableRangeB9.getValue()) {
+      startTimeData();
+    } else {
+      endTimeData();
+    }
   } else {
-    endTimeData();
+    startTimeData();
   }
 }
 
 function startTimeData() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var tableRange = sheet.getRange('A2'); // テーブルの最初のセル
+  var tableRange = sheet.getRange('A9'); // テーブルの最初のセル
 
   var date = new Date(); // 現在の日付と時刻を取得
   date = roundDownTo15Minutes(date); // 15分単位で切り捨て
@@ -42,7 +47,7 @@ function startTimeData() {
     var description = result.getResponseText();
     
     // 新しいデータを挿入する行を選択
-    var newRow = sheet.getRange('A2').getRow();
+    var newRow = sheet.getRange('A9').getRow();
     // 既存のデータを下にシフトさせる
     sheet.insertRowsBefore(newRow, 1);
     
@@ -59,7 +64,7 @@ function startTimeData() {
 
 function endTimeData() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var tableRange = sheet.getRange('B2'); // テーブルの最初のセル
+  var tableRange = sheet.getRange('B9'); // テーブルの最初のセル
 
   var date = new Date(); // 現在の日付と時刻を取得
   date = roundUpTo15Minutes(date); // 15分単位で切り上げ

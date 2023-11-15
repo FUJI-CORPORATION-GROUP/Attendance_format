@@ -19,9 +19,9 @@ function roundUpTo15Minutes(date) {
 function mainButton() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   var tableRangeB9 = sheet.getRange('B9'); // テーブルの最初のセル
-  var tableRangeB10 = sheet.getRange('B10'); // テーブルの最初のセル
+  var tableRangeA9 = sheet.getRange('A9'); // テーブルの最初のセル
 
-  if (tableRangeB10.getValue()) {
+  if (tableRangeA9.getValue()) {
     if (tableRangeB9.getValue()) {
       startTimeData();
     } else {

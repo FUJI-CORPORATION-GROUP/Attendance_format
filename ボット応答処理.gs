@@ -39,11 +39,12 @@ function doGet(e) {
 const doPost = e => {
   const message = JSON.parse(e.postData.contents);
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  // sheet.getRange(1, 5).setValue(message);
 
   let messageObj
 
-  if (message.content.startsWith("勤務開始：")) {
-    const restOfMessage = message.content.slice("勤務開始：".length).trim(); // メッセージから「勤務開始」を取り除いてトリム
+  if (message.content.startsWith("勤務開始/")) {
+    const restOfMessage = message.content.slice("勤務開始/".length).trim(); // メッセージから「勤務開始」を取り除いてトリム
 
     // ここで restOfMessage を使って必要な処理を実行
     startBotTimeData(restOfMessage, message.author.username);

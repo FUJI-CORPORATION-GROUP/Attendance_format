@@ -58,12 +58,50 @@ function startTimeData() {
     var description = 'キャンセルされました';
     Browser.msgBox(description);
   }
+}
 
+function startBotTimeData(message, userId){
+  // シート名の生成
+  var sheetName = userId.startsWith('leaf6328') ? 'ミナリALL' : 'タガALL';
+  // シートの取得
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+  
+  // シートが存在しない場合は作成
+  if (!sheet) {
+    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(sheetName);
+    // シートのヘッダーなどを設定する処理があればここで行う
+  }
+
+  var tableRange = sheet.getRange('A9'); // テーブルの最初のセル
+
+  var date = new Date(); // 現在の日付と時刻を取得
+  date = roundDownTo15Minutes(date); // 15分単位で切り捨て
+  
+  // discordBot用に書き換え
+  var description = message
+  // 新しいデータを挿入する行を選択
+  var newRow = sheet.getRange('A9').getRow();
+  // 既存のデータを下にシフトさせる
+  sheet.insertRowsBefore(newRow, 1);
+  // テキストを業務内容として記録
+  sheet.getRange(tableRange.getRow(), 3).setValue(description);
+  tableRange.setValue(date);
 }
 
 
-function endTimeData() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+function endTimeData(userId) {
+  // シート名の生成
+  var sheetName = userId.startsWith('leaf6328') ? 'ミナリALL' : 'タガALL';
+  // シートの取得
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+
+  // シートが存在しない場合は作成
+  if (!sheet) {
+    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(sheetName);
+    // シートのヘッダーなどを設定する処理があればここで行う
+  }
+
   var tableRange = sheet.getRange('B9'); // テーブルの最初のセル
 
   var date = new Date(); // 現在の日付と時刻を取得

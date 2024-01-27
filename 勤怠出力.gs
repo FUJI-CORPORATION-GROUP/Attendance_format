@@ -200,6 +200,7 @@ function getExcelData(){
 
 function exportAttendanceRecordFile(){
   exportNewSheet()
+  changeExcel()
 }
 
 
@@ -213,30 +214,61 @@ function exportNewSheet(){
   var detailSheet = spreadSheet.getSheetByName('明細');
   var sumSheet = spreadSheet.getSheetByName("合計")
   
-  var fiileName = 'newnew';
+  var fiileName = 'Excel変換用スプシ';
   
-  var newSheet = Drive.Files.create({
+  var newSheetFile = Drive.Files.create({
     "name":   fiileName,
     "mimeType": "application/vnd.google-apps.spreadsheet",
     "parents":  [folderId]
   });
 
-  var newSheetId  = SpreadsheetApp.openById(newSheet.id);
-  var getid = newSheetId.getId();
- 
+  var newSheet  = SpreadsheetApp.openById(newSheetFile.id);
+  Logger.log(newSheetFile.id)
+  Logger.log(newSheet.getId())
+
+
   // 新しいシートにコピー
-  detailSheet.copyTo(newSheetId);
-  sumSheet.copyTo(newSheetId);
+  detailSheet.copyTo(newSheet);
+  sumSheet.copyTo(newSheet);
 
   // シート名変更
-  let exportDetailSheet  = newSheetId.getSheetByName('明細 のコピー');
-  let exportSumSheet  = newSheetId.getSheetByName('合計 のコピー');
+  let exportDetailSheet  = newSheet.getSheetByName('明細 のコピー');
+  let exportSumSheet  = newSheet.getSheetByName('合計 のコピー');
   exportDetailSheet.setName('明細');
   exportSumSheet.setName('合計');
 
   // 無駄なシート削除
-  let deleteSheet  = newSheetId.getSheets();
-  newSheetId.deleteSheet(deleteSheet[0]);
+  let deleteSheet  = newSheet.getSheets();
+  newSheet.deleteSheet(deleteSheet[0]);
 }
 
+function changeExcel(){
+   var outputFolder = DriveApp.getFoldersByName("出力勤怠表").next();
 
+  var fileName = "Excel変換用スプシ";
+  var file = DriveApp.getFilesByName(fileName).next();
+  var fileId = file.getId();
+
+  var url = "https://docs.google.com/spreadsheets/d/" + fileId + "/export?format=xlsx";
+
+  //urlfetchする際のoptionsを宣言
+  var options = {
+    method:"get",
+    headers:{"Authorization":"Bearer " + ScriptApp.getOAuthToken()}, 
+  }
+
+  //urlfetch
+  var response = UrlFetchApp.fetch(url,options);
+  
+  //urlfetchのレスポンスをblobクラスとして取得
+  var blob = response.getBlob();
+
+  //取得したblobクラスから新規ファイルを生成
+  var newFile = DriveApp.createFile(blob);
+  
+  //作成したファイルの名前を変更
+  newFile.setName(fileName);
+  
+  //作成したファイルを格納フォルダに移動
+  newFile.moveTo(outputFolder);
+}

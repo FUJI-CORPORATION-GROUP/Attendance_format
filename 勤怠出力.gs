@@ -198,27 +198,35 @@ function getExcelData(){
   Logger.log(values)
 }
 
+function exportAttendanceRecordFile(){
+  exportNewSheet()
+}
+
+
 function exportNewSheet(){
+  
+  // 生成先のファイル
+  const folder = DriveApp.getFoldersByName('出力勤怠表');
+  const folderId = folder.next().getId()
 
- var spreadSheet = SpreadsheetApp.getActiveSpreadsheet();
- var detailSheet = spreadSheet.getSheetByName('明細');
- var sumSheet = spreadSheet.getSheetByName("合計")
- 
- var fiileName = '新しいやつ';
- 
- var newSheet = Drive.Files.create({
-   "name":   fiileName,
-   "mimeType": "application/vnd.google-apps.spreadsheet",
-  //  "parents":  [folderId]
- });
+  var spreadSheet = SpreadsheetApp.getActiveSpreadsheet();
+  var detailSheet = spreadSheet.getSheetByName('明細');
+  var sumSheet = spreadSheet.getSheetByName("合計")
+  
+  var fiileName = 'newnew';
+  
+  var newSheet = Drive.Files.create({
+    "name":   fiileName,
+    "mimeType": "application/vnd.google-apps.spreadsheet",
+    "parents":  [folderId]
+  });
 
- var newSheetId  = SpreadsheetApp.openById(newSheet.id);
- var getid = newSheetId.getId();
+  var newSheetId  = SpreadsheetApp.openById(newSheet.id);
+  var getid = newSheetId.getId();
  
   // 新しいシートにコピー
   detailSheet.copyTo(newSheetId);
   sumSheet.copyTo(newSheetId);
-
 
   // シート名変更
   let exportDetailSheet  = newSheetId.getSheetByName('明細 のコピー');
@@ -228,7 +236,7 @@ function exportNewSheet(){
 
   // 無駄なシート削除
   let deleteSheet  = newSheetId.getSheets();
-//   newSheetId.deleteSheet(deleteSheet[0]);
+  newSheetId.deleteSheet(deleteSheet[0]);
 }
 
 

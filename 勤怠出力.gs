@@ -21,6 +21,9 @@ function makeSheet(start,end){
   Logger.log(data);
   makeDetailSheet(data);
   makeSumSheet(start,end,data)
+
+
+  // exportAttendanceRecordFile();
 }
 
 function makeDetailSheet(data){
@@ -190,31 +193,49 @@ function showDatePickerDialog() {
 }
 
 
-// ---------------------
-// 出力処理
-// ---------------------
+// 勤怠表生成メイン関数
+function exportAttendanceRecordFile(start, end){
+  var folderName = "出力勤怠表";
 
+  //TODO: ファイル名の決定
+  var sheet = SpreadsheetApp.getActiveSheet().getName()
+  var fileName = sheet + "_" + start
 
-function exportAttendanceRecordFile(){
-  exportNewSheet()
-  changeExcel()
+  // 合計・明細シート作成
+  // TODO：UserIDに応じて2つ作る
+  makeSheet(start,end)
+
+  // 合計・明細シートをExcelに出力
+  // TODO: UserIDに応じてそれぞれ作成
+  exportSheetToExcel(folderName, fileName)
+
+  // ダウンロードするために，データ取得
+  var data = downloadExcelFile(fileName)
+  return data
 }
 
+function exportSheetToExcel(folderName, fileName){
+  // TODO: UserIDに応じてそれぞれ作成
+  exportNewSheet(folderName,fileName)
+  // スプシからExcelファイルに変換
+  changeExcel(folderName,fileName)
+}
 
-function exportNewSheet(){
-  
+function exportNewSheet(folderName, fileName){
+  // Debug用
+  // var folderName = "出力勤怠表";
+  // var newFileName = "test"
+
   // 生成先のファイル
-  const folder = DriveApp.getFoldersByName('出力勤怠表');
+  const folder = DriveApp.getFoldersByName(folderName);
   const folderId = folder.next().getId()
 
   var spreadSheet = SpreadsheetApp.getActiveSpreadsheet();
   var detailSheet = spreadSheet.getSheetByName('明細');
   var sumSheet = spreadSheet.getSheetByName("合計")
   
-  var fiileName = 'Excel変換用スプシ';
-  
   var newSheetFile = Drive.Files.create({
-    "name":   fiileName,
+    "name":   fileName,
     "mimeType": "application/vnd.google-apps.spreadsheet",
     "parents":  [folderId]
   });
@@ -239,10 +260,12 @@ function exportNewSheet(){
   newSheet.deleteSheet(deleteSheet[0]);
 }
 
-function changeExcel(){
-   var outputFolder = DriveApp.getFoldersByName("出力勤怠表").next();
+function changeExcel(folderName, fileName){
+  // Debug用
+  // var folderName = "出力勤怠表";
+  // var newFileName = "test"
 
-  var fileName = "Excel変換用スプシ";
+  var folder = DriveApp.getFoldersByName(folderName).next();
   var file = DriveApp.getFilesByName(fileName).next();
   var fileId = file.getId();
 
@@ -267,10 +290,9 @@ function changeExcel(){
   newFile.setName(fileName);
   
   //作成したファイルを格納フォルダに移動
-  newFile.moveTo(outputFolder);
+  newFile.moveTo(folder);
 
   var getUrl = newFile.getDownloadUrl();
-  Logger.log(getUrl)
 }
 
 
@@ -280,32 +302,9 @@ function showDownloadDialog() {
       .setHeight(250);
   
   SpreadsheetApp.getUi().showModalDialog(htmlOutput, 'Excel出力');
-
 }
 
-function getExcelData(){
-  var fileName = "Excel変換用スプシ";
-  var file = DriveApp.getFilesByName(fileName).next();
-  var fileId = file.getId();
-  var url = "https://docs.google.com/spreadsheets/d/" + fileId + "/export?format=xlsx";
-  //urlfetchする際のoptionsを宣言
-  var options = {
-    method:"get",
-    headers:{"Authorization":"Bearer " + ScriptApp.getOAuthToken()}, 
-  }
-
-  //urlfetch
-  var response = UrlFetchApp.fetch(url,options);
-  
-  //urlfetchのレスポンスをblobクラスとして取得
-  var blob = response.getBlob();
-
-  Logger.log(blob)
-  return blob;
-}
-
-function downloadExcelFile() {
-  var fileName = "Excel変換用スプシ";
+function downloadExcelFile(fileName) {
   var file = DriveApp.getFilesByName(fileName).next();
   var blob = file.getBlob();
   var data = Utilities.base64Encode(blob.getBytes());
@@ -317,13 +316,4 @@ function downloadExcelFile() {
     contentType: contentType,
     base64Data: data
   };
-}
-
-
-function getDownloadFileUrl(){
-  var fileName = "Excel変換用スプシ";
-  var file = DriveApp.getFilesByName(fileName).next();
-  var url = file.getDownloadUrl();
-  Logger.log(url)
-  return url;
 }

@@ -189,14 +189,11 @@ function showDatePickerDialog() {
 
 }
 
-function getExcelData(){
-  const spreadSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("明細")
-  const sheetId = spreadSheet.getSheetId()
-  var fileName = spreadSheet.getName() + ".xlsx"
-  
-  const values = spreadSheet.getDataRange().getDisplayValues()
-  Logger.log(values)
-}
+
+// ---------------------
+// 出力処理
+// ---------------------
+
 
 function exportAttendanceRecordFile(){
   exportNewSheet()
@@ -271,4 +268,59 @@ function changeExcel(){
   
   //作成したファイルを格納フォルダに移動
   newFile.moveTo(outputFolder);
+
+  var getUrl = newFile.getDownloadUrl();
+  Logger.log(getUrl)
+}
+
+
+function showDownloadDialog() {
+  var htmlOutput = HtmlService.createHtmlOutputFromFile('Download')
+      .setWidth(300)
+      .setHeight(250);
+  
+  SpreadsheetApp.getUi().showModalDialog(htmlOutput, 'Excel出力');
+
+}
+
+function getExcelData(){
+  var fileName = "Excel変換用スプシ";
+  var file = DriveApp.getFilesByName(fileName).next();
+  var fileId = file.getId();
+  var url = "https://docs.google.com/spreadsheets/d/" + fileId + "/export?format=xlsx";
+  //urlfetchする際のoptionsを宣言
+  var options = {
+    method:"get",
+    headers:{"Authorization":"Bearer " + ScriptApp.getOAuthToken()}, 
+  }
+
+  //urlfetch
+  var response = UrlFetchApp.fetch(url,options);
+  
+  //urlfetchのレスポンスをblobクラスとして取得
+  var blob = response.getBlob();
+
+  Logger.log(blob)
+  return blob;
+}
+
+function downloadExcelFile() {
+  var fileName = "Excel変換用スプシ";
+  var file = DriveApp.getFilesByName(fileName).next();  var blob = file.getBlob();
+  var fileName = file.getName();
+  var contentType = blob.getContentType();
+  Logger.log(fileName + " " + contentType)
+  return {
+    fileName: fileName,
+    contentType: contentType,
+    content: blob.getBytes(),
+  };
+}
+
+function getDownloadFileUrl(){
+  var fileName = "Excel変換用スプシ";
+  var file = DriveApp.getFilesByName(fileName).next();
+  var url = file.getDownloadUrl();
+  Logger.log(url)
+  return url;
 }

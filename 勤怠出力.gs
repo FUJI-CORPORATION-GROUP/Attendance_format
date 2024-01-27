@@ -306,16 +306,19 @@ function getExcelData(){
 
 function downloadExcelFile() {
   var fileName = "Excel変換用スプシ";
-  var file = DriveApp.getFilesByName(fileName).next();  var blob = file.getBlob();
-  var fileName = file.getName();
+  var file = DriveApp.getFilesByName(fileName).next();
+  var blob = file.getBlob();
+  var data = Utilities.base64Encode(blob.getBytes());
   var contentType = blob.getContentType();
-  Logger.log(fileName + " " + contentType)
+  var fileName = file.getName();
+  
   return {
     fileName: fileName,
     contentType: contentType,
-    content: blob.getBytes(),
+    base64Data: data
   };
 }
+
 
 function getDownloadFileUrl(){
   var fileName = "Excel変換用スプシ";

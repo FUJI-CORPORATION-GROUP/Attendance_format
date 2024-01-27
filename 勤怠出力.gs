@@ -189,6 +189,46 @@ function showDatePickerDialog() {
 
 }
 
+function getExcelData(){
+  const spreadSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("明細")
+  const sheetId = spreadSheet.getSheetId()
+  var fileName = spreadSheet.getName() + ".xlsx"
+  
+  const values = spreadSheet.getDataRange().getDisplayValues()
+  Logger.log(values)
+}
 
+function exportNewSheet(){
+
+ var spreadSheet = SpreadsheetApp.getActiveSpreadsheet();
+ var detailSheet = spreadSheet.getSheetByName('明細');
+ var sumSheet = spreadSheet.getSheetByName("合計")
+ 
+ var fiileName = '新しいやつ';
+ 
+ var newSheet = Drive.Files.create({
+   "name":   fiileName,
+   "mimeType": "application/vnd.google-apps.spreadsheet",
+  //  "parents":  [folderId]
+ });
+
+ var newSheetId  = SpreadsheetApp.openById(newSheet.id);
+ var getid = newSheetId.getId();
+ 
+  // 新しいシートにコピー
+  detailSheet.copyTo(newSheetId);
+  sumSheet.copyTo(newSheetId);
+
+
+  // シート名変更
+  let exportDetailSheet  = newSheetId.getSheetByName('明細 のコピー');
+  let exportSumSheet  = newSheetId.getSheetByName('合計 のコピー');
+  exportDetailSheet.setName('明細');
+  exportSumSheet.setName('合計');
+
+  // 無駄なシート削除
+  let deleteSheet  = newSheetId.getSheets();
+//   newSheetId.deleteSheet(deleteSheet[0]);
+}
 
 

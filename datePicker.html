@@ -35,6 +35,12 @@
         google.script.host.close(); // ダイアログを閉じる
 
       }
+
+      function exportDate(){
+        var content = <?= getData(); ?>;  // 出力データを GAS から取得する
+        var blob = new Blob([ content ], { "type" : "text/csv"});
+        document.getElementById("download").href = window.URL.createObjectURL(blob);
+      }
     </script>
   </head>
   <body>
@@ -61,5 +67,7 @@
     <input type="date" id="end-date" oninput="selectDateRange()">
     <br>
     <button id="select-button" onclick="sendDate()" disabled>出力</button>
+    <a id="download" href="#" download="test.xlsx" onclick="exportDate()">Excel出力</a>
+
   </body>
 </html>

@@ -131,8 +131,7 @@ function makeSumSheet(start,end, data){
       var endDate = new Date(d[1]);
       if(tmpTime.getFullYear() == startDate.getFullYear()&&tmpTime.getMonth() == startDate.getMonth()&&tmpTime.getDate() == startDate.getDate()){
         // 勤務時間
-        var workTime = (endDate - startDate) / 1000 / 60;
-        workTime += workTime;
+        workTime += (endDate - startDate) / 1000 / 60;
       }
     }
     var workTimeRange = tableRange.offset(0, 5);

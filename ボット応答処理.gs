@@ -43,8 +43,8 @@ const doPost = e => {
 
   let messageObj
 
-  if (message.content.startsWith("勤務開始/")) {
-    const restOfMessage = message.content.slice("勤務開始/".length).trim(); // メッセージから「勤務開始」を取り除いてトリム
+  if (message.content.startsWith("start/")) {
+    const restOfMessage = message.content.slice("start/".length).trim(); // メッセージから「勤務開始」を取り除いてトリム
 
     // ここで restOfMessage を使って必要な処理を実行
     startBotTimeData(restOfMessage, message.author.username);
@@ -55,7 +55,7 @@ const doPost = e => {
       'content': '計測を開始したよ！😊'
     };
   }
-  else if (message.content.startsWith("勤務終了")) {
+  else if (message.content.startsWith("end")) {
     endTimeData(message.author.username);
 
     // 返信データを作成

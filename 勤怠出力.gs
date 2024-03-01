@@ -26,8 +26,34 @@ function makeSheet(start,end){
   }
 
   Logger.log(attendances);
-  makeDetailSheet(attendances);
-  makeSumSheet(start,end,attendances)
+
+  // 勤怠表を修正する
+  var modifiedAttendances  = [];
+  for(attendance of attendances){
+    var theStartDate = attendance.startDate.getDate()
+    var theEndDate = attendance.endDate.getDate()
+    // 日をまたいでいた時の処理
+    if(theStartDate != theEndDate){
+      var theDayDate = new Date(attendance.startDate);
+      var theDayAttendance = Object.assign({},attendance);
+      theDayAttendance.endDate = new Date(theDayDate.setHours(23, 45, 0, 0))
+
+      var theNextDate = new Date(attendance.endDate);
+      var theNextDayAttendance = Object.assign({},attendance);
+      theNextDayAttendance.startDate = new Date(theNextDate.setHours(0, 0, 0, 0))
+      theNextDayAttendance.endDate.setMinutes(theNextDayAttendance.endDate.getMinutes() + 15)
+
+      modifiedAttendances.push(theNextDayAttendance)
+      modifiedAttendances.push(theDayAttendance)
+      
+    }else{
+      modifiedAttendances.push(attendance)
+    }
+  }
+  Logger.log("修正完了")
+  Logger.log(modifiedAttendances);
+  makeDetailSheet(modifiedAttendances);
+  makeSumSheet(start,end,modifiedAttendances)
 
 
   // exportAttendanceRecordFile();
@@ -141,8 +167,7 @@ function makeSumSheet(start,end, attendances){
       var endDate = new Date(attendance.endDate);
       if(tmpTime.getFullYear() == startDate.getFullYear()&&tmpTime.getMonth() == startDate.getMonth()&&tmpTime.getDate() == startDate.getDate()){
         // 勤務時間
-        var workTime = (endDate - startDate) / 1000 / 60;
-        workTime += workTime;
+        workTime += (endDate - startDate) / 1000 / 60;
       }
     }
     var workTimeRange = tableRange.offset(0, 5);

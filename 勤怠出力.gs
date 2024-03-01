@@ -1,8 +1,8 @@
 
 
 function makeSheet(start,end){
-  start = "2024/02/11 17:00:00"
-  end = "2024/03/11 17:00:00"
+  // start = "2024/02/11 17:00:00"
+  // end = "2024/03/11 17:00:00"
   start = new Date(start)
   end = new Date(end)
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
@@ -25,7 +25,6 @@ function makeSheet(start,end){
     }
   }
 
-  Logger.log(attendances);
 
   // 勤怠表を修正する
   var modifiedAttendances  = [];
@@ -64,11 +63,17 @@ function makeSheet(start,end){
       modifiedAttendances.push(attendance)
     }
   }
+
+  // 日付によるソート
+  modifiedAttendances = modifiedAttendances.sort(function(a,b){
+    return (a.startDate > b.startDate) ? -1 : 1;
+  })
+
   makeDetailSheet(modifiedAttendances);
   makeSumSheet(start,end,modifiedAttendances)
 
 
-  // exportAttendanceRecordFile();
+  exportAttendanceRecordFile();
 }
 
 function makeDetailSheet(attendances){

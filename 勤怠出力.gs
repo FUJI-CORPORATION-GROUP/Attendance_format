@@ -1,11 +1,12 @@
+const parsonalContents = [
+  {allSheetName: "タガALL", excelFileName: "田賀康平"},
+  {allSheetName: "ミナリALL", excelFileName: "實成翔"},
+]
 
-
-function makeSheet(start,end){
-  // start = "2024/02/11 17:00:00"
-  // end = "2024/03/11 17:00:00"
+function makeSheet(start,end,allSheetName){
   start = new Date(start)
   end = new Date(end)
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(allSheetName);
   var tableRange = sheet.getDataRange(); // テーブルの最初のセル
 
   var cells = tableRange.getValues();
@@ -70,9 +71,6 @@ function makeSheet(start,end){
 
   makeDetailSheet(modifiedAttendances);
   makeSumSheet(start,end,modifiedAttendances)
-
-
-  exportAttendanceRecordFile();
 
 }
 
@@ -242,17 +240,29 @@ function showDatePickerDialog() {
 }
 
 
+// ParsonalContentsに登録している人の勤怠表を出力する
+function exportParsonalsAttendanceRecordFile(start, end){
+  var excelDataArr = [];
+  for(parsonalContent of parsonalContents){
+    console.log(parsonalContents)
+    var data = exportAttendanceRecordFile(start, end, parsonalContent.allSheetName, parsonalContent.excelFileName)
+    excelDataArr.push(data)
+  }
+
+  return excelDataArr
+}
+
+
 // 勤怠表生成メイン関数
-function exportAttendanceRecordFile(start, end){
+function exportAttendanceRecordFile(start, end, allSheetName,excelFileName){
   var folderName = "出力勤怠表";
 
   //TODO: ファイル名の決定
-  var sheet = SpreadsheetApp.getActiveSheet().getName()
-  var fileName = sheet + "_" + start
+  var fileName = excelFileName + "_" + start
 
   // 合計・明細シート作成
   // TODO：UserIDに応じて2つ作る
-  makeSheet(start,end)
+  makeSheet(start,end,allSheetName)
 
   // 合計・明細シートをExcelに出力
   // TODO: UserIDに応じてそれぞれ作成
@@ -264,6 +274,7 @@ function exportAttendanceRecordFile(start, end){
 }
 
 function exportSheetToExcel(folderName, fileName){
+  Logger.log("exportSheetToExcel")
   // TODO: UserIDに応じてそれぞれ作成
   exportNewSheet(folderName,fileName)
   // スプシからExcelファイルに変換

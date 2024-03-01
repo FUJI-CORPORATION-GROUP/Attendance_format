@@ -24,8 +24,7 @@ function makeSheet(start,end){
       }
     }
   }
-
-
+  
   // 勤怠表を修正する
   var modifiedAttendances  = [];
   for(attendance of attendances){
@@ -74,6 +73,7 @@ function makeSheet(start,end){
 
 
   exportAttendanceRecordFile();
+
 }
 
 function makeDetailSheet(attendances){
@@ -343,7 +343,6 @@ function changeExcel(folderName, fileName){
 
   var getUrl = newFile.getDownloadUrl();
 }
-
 
 function showDownloadDialog() {
   var htmlOutput = HtmlService.createHtmlOutputFromFile('Download')

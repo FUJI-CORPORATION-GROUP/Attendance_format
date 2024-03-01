@@ -31,20 +31,17 @@
         var startDate = document.getElementById("start-date").value;
         var endDate = document.getElementById("end-date").value;
 
-        // google.script.run.exportParsonalsAttendanceRecordFile(startDate, endDate); // 開始日と終了日を関数に渡す
-        // google.script.run.makeSheet(startDate, endDate); // 開始日と終了日を関数に渡す
-        // google.script.host.close(); // ダイアログを閉じる
-
-        // google.script.run.withSuccessHandler(downloadComplete).exportAttendanceRecordFile(startDate, endDate);
+        // 勤怠表生成関数呼び出し
+        // 返り血を受け取ったらdownloadComplete()を実行
         google.script.run.withSuccessHandler(downloadComplete).exportParsonalsAttendanceRecordFile(startDate, endDate);
 
       }
-
+      
       function downloadExcel() {
         google.script.run.withSuccessHandler(downloadComplete).downloadExcelFile();
       }
 
-      // ダウンロードが完了した後の処理
+      // 送られてきたデータをもとにExcelデータをダウンロード
       function downloadComplete(excelDataArr) {
         console.log("downloadComplete")
         for (data of excelDataArr){

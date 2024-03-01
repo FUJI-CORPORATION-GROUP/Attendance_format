@@ -1,6 +1,7 @@
+// 人の情報を埋め込みます
 const parsonalContents = [
-  {allSheetName: "タガALL", excelFileName: "田賀康平"},
-  {allSheetName: "ミナリALL", excelFileName: "實成翔"},
+  {allSheetName: "タガALL", excelFileName: "_田賀康平_06663"},
+  {allSheetName: "ミナリALL", excelFileName: "_實成翔_06664"},
 ]
 
 function makeSheet(start,end,allSheetName){
@@ -147,7 +148,7 @@ function makeDetailSheet(attendances){
 
 }
 
-
+// 合計シート作成
 function makeSumSheet(start,end, attendances){
   var sheetName = "合計";
   clearSheet(sheetName)
@@ -220,6 +221,7 @@ function makeSumSheet(start,end, attendances){
 
 }
 
+// シートを空にする
 function clearSheet(sheetName){
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   const lastRow = sheet.getLastRow();
@@ -229,7 +231,7 @@ function clearSheet(sheetName){
   }
 }
 
-
+// 出力ボタン呼び出し関数
 function showDatePickerDialog() {
   var htmlOutput = HtmlService.createHtmlOutputFromFile('datePicker')
       .setWidth(300)
@@ -243,9 +245,11 @@ function showDatePickerDialog() {
 // ParsonalContentsに登録している人の勤怠表を出力する
 function exportParsonalsAttendanceRecordFile(start, end){
   var excelDataArr = [];
+  var date = new Date(start)
+  var firstFileName = "勤怠表_"  + date.getFullYear() + "" + String((date.getMonth() + 1)).padStart(2, '0'); 
   for(parsonalContent of parsonalContents){
-    console.log(parsonalContents)
-    var data = exportAttendanceRecordFile(start, end, parsonalContent.allSheetName, parsonalContent.excelFileName)
+    var fullFileName = firstFileName + parsonalContent.excelFileName
+    var data = exportAttendanceRecordFile(start, end, parsonalContent.allSheetName, fullFileName)
     excelDataArr.push(data)
   }
 
@@ -257,19 +261,16 @@ function exportParsonalsAttendanceRecordFile(start, end){
 function exportAttendanceRecordFile(start, end, allSheetName,excelFileName){
   var folderName = "出力勤怠表";
 
-  //TODO: ファイル名の決定
-  var fileName = excelFileName + "_" + start
-
   // 合計・明細シート作成
   // TODO：UserIDに応じて2つ作る
   makeSheet(start,end,allSheetName)
 
   // 合計・明細シートをExcelに出力
   // TODO: UserIDに応じてそれぞれ作成
-  exportSheetToExcel(folderName, fileName)
+  exportSheetToExcel(folderName, excelFileName)
 
   // ダウンロードするために，データ取得
-  var data = downloadExcelFile(fileName)
+  var data = downloadExcelFile(excelFileName)
   return data
 }
 
@@ -282,10 +283,6 @@ function exportSheetToExcel(folderName, fileName){
 }
 
 function exportNewSheet(folderName, fileName){
-  // Debug用
-  // var folderName = "出力勤怠表";
-  // var newFileName = "test"
-
   // 生成先のファイル
   const folder = DriveApp.getFoldersByName(folderName);
   const folderId = folder.next().getId()
@@ -301,9 +298,6 @@ function exportNewSheet(folderName, fileName){
   });
 
   var newSheet  = SpreadsheetApp.openById(newSheetFile.id);
-  Logger.log(newSheetFile.id)
-  Logger.log(newSheet.getId())
-
 
   // 新しいシートにコピー
   detailSheet.copyTo(newSheet);

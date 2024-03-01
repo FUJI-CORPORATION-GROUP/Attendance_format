@@ -1,8 +1,8 @@
 
 
 function makeSheet(start,end){
-  // start = "2024/02/11 17:00:00"
-  // end = "2024/03/11 17:00:00"
+  start = "2024/02/11 17:00:00"
+  end = "2024/03/11 17:00:00"
   start = new Date(start)
   end = new Date(end)
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
@@ -30,28 +30,40 @@ function makeSheet(start,end){
   // 勤怠表を修正する
   var modifiedAttendances  = [];
   for(attendance of attendances){
-    var theStartDate = attendance.startDate.getDate()
-    var theEndDate = attendance.endDate.getDate()
+    var theStartDate = attendance.startDate
+    var theEndDate = attendance.endDate
+    // 日数の計算
+    var diffDay = Math.abs(new Date(theEndDate).setHours(0,0,0,0) - new Date(theStartDate).setHours(0,0,0,0)) / 1000 / 60 / 60 / 24;
+
     // 日をまたいでいた時の処理
-    if(theStartDate != theEndDate){
-      var theDayDate = new Date(attendance.startDate);
-      var theDayAttendance = Object.assign({},attendance);
-      theDayAttendance.endDate = new Date(theDayDate.setHours(23, 45, 0, 0))
-
-      var theNextDate = new Date(attendance.endDate);
-      var theNextDayAttendance = Object.assign({},attendance);
-      theNextDayAttendance.startDate = new Date(theNextDate.setHours(0, 0, 0, 0))
-      theNextDayAttendance.endDate.setMinutes(theNextDayAttendance.endDate.getMinutes() + 15)
-
-      modifiedAttendances.push(theNextDayAttendance)
-      modifiedAttendances.push(theDayAttendance)
+    if(diffDay >= 1){
+      for(var i = 0;i <= diffDay;i++){
+        var theDate = new Date(theStartDate).setDate(theStartDate.getDate()+  i)
+        var theModifiedAttendance = Object.assign({},attendance);
+        if(i == 0){
+          // startDate = startDate
+          theModifiedAttendance.startDate = new Date(attendance.startDate);
+          // endDate = 23:45
+          theModifiedAttendance.endDate = new Date(theDate).setHours(23, 45, 0, 0)
+        }else if(i == diffDay){
+          // startDate = 0:00
+          theModifiedAttendance.startDate = new Date(theDate).setHours(0, 0, 0, 0)
+          // endDate = endDate
+          theModifiedAttendance.endDate = new Date(attendance.endDate).setMinutes(attendance.endDate.getMinutes() + 15*diffDay);
+        }else{
+          // startDate = 0:00
+          theModifiedAttendance.startDate = new Date(theDate).setHours(0, 0, 0, 0)
+          // endDate = 23:45
+          theModifiedAttendance.endDate = new Date(theDate).setHours(23, 45, 0, 0)
+        }
+        modifiedAttendances.push(theModifiedAttendance)
+      }
       
     }else{
+
       modifiedAttendances.push(attendance)
     }
   }
-  Logger.log("修正完了")
-  Logger.log(modifiedAttendances);
   makeDetailSheet(modifiedAttendances);
   makeSumSheet(start,end,modifiedAttendances)
 

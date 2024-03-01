@@ -1,6 +1,8 @@
 
 
 function makeSheet(start,end){
+  // start = "2024/02/11 17:00:00"
+  // end = "2024/03/11 17:00:00"
   start = new Date(start)
   end = new Date(end)
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
@@ -8,25 +10,73 @@ function makeSheet(start,end){
 
   var cells = tableRange.getValues();
   Logger.log(typeof(cells))
-  var data = [];
+  var attendances = [];
   for(cell of cells){
     var thedate = cell[0];
     if(typeof(thedate) == "object"){
+      // 期間内かどうかの判定
       if(start <= thedate  && thedate <= end){
-        data.push(cell);
+        var attendance = {}
+        attendance.startDate = cell[0]
+        attendance.endDate = cell[1]
+        attendance.workContent = cell[2]
+        attendances.push(attendance);
       }
     }
   }
+  
+  // 勤怠表を修正する
+  var modifiedAttendances  = [];
+  for(attendance of attendances){
+    var theStartDate = attendance.startDate
+    var theEndDate = attendance.endDate
+    // 日数の計算
+    var diffDay = Math.abs(new Date(theEndDate).setHours(0,0,0,0) - new Date(theStartDate).setHours(0,0,0,0)) / 1000 / 60 / 60 / 24;
 
-  Logger.log(data);
-  makeDetailSheet(data);
-  makeSumSheet(start,end,data)
+    // 日をまたいでいた時の処理
+    if(diffDay >= 1){
+      for(var i = 0;i <= diffDay;i++){
+        var theDate = new Date(theStartDate).setDate(theStartDate.getDate()+  i)
+        var theModifiedAttendance = Object.assign({},attendance);
+        if(i == 0){
+          // startDate = startDate
+          theModifiedAttendance.startDate = new Date(attendance.startDate);
+          // endDate = 23:45
+          theModifiedAttendance.endDate = new Date(theDate).setHours(23, 45, 0, 0)
+        }else if(i == diffDay){
+          // startDate = 0:00
+          theModifiedAttendance.startDate = new Date(theDate).setHours(0, 0, 0, 0)
+          // endDate = endDate
+          theModifiedAttendance.endDate = new Date(attendance.endDate).setMinutes(attendance.endDate.getMinutes() + 15*diffDay);
+        }else{
+          // startDate = 0:00
+          theModifiedAttendance.startDate = new Date(theDate).setHours(0, 0, 0, 0)
+          // endDate = 23:45
+          theModifiedAttendance.endDate = new Date(theDate).setHours(23, 45, 0, 0)
+        }
+        modifiedAttendances.push(theModifiedAttendance)
+      }
+      
+    }else{
+
+      modifiedAttendances.push(attendance)
+    }
+  }
+
+  // 日付によるソート
+  modifiedAttendances = modifiedAttendances.sort(function(a,b){
+    return (a.startDate > b.startDate) ? -1 : 1;
+  })
+
+  makeDetailSheet(modifiedAttendances);
+  makeSumSheet(start,end,modifiedAttendances)
 
 
-  // exportAttendanceRecordFile();
+  exportAttendanceRecordFile();
+
 }
 
-function makeDetailSheet(data){
+function makeDetailSheet(attendances){
   Logger.log("makeDetailSheet");
 
   var sheetName = "明細";
@@ -34,14 +84,14 @@ function makeDetailSheet(data){
   var detailSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   var tableRange = detailSheet.getRange('A3'); // テーブルの最初のセル
 
-  console.log(data)
-  data.reverse();
-  console.log(data)
+  console.log(attendances)
+  attendances.reverse();
+  console.log(attendances)
   
   var allWorkTime = 0;
-  for(d of data){
-    var startDate = new Date(d[0]);
-    var endDate = new Date(d[1]);
+  for(attendance of attendances){
+    var startDate = new Date(attendance.startDate);
+    var endDate = new Date(attendance.endDate);
 
     //月
     var month = startDate.getMonth() + 1;
@@ -84,7 +134,7 @@ function makeDetailSheet(data){
     allWorkTime += workTime;
 
     // 業務内容
-    var task = d[2];
+    var task = attendance.workContent;
     var taskRange = tableRange.offset(0, 8);
     taskRange.setValue(task);
 
@@ -100,7 +150,7 @@ function makeDetailSheet(data){
 }
 
 
-function makeSumSheet(start,end, data){
+function makeSumSheet(start,end, attendances){
   var sheetName = "合計";
   clearSheet(sheetName)
   var sumSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
@@ -129,9 +179,9 @@ function makeSumSheet(start,end, data){
 
     //tmpTimeが同じ日時
     var workTime = 0;
-    for(d of data){
-      var startDate = new Date(d[0]);
-      var endDate = new Date(d[1]);
+    for(attendance of attendances){
+      var startDate = new Date(attendance.startDate);
+      var endDate = new Date(attendance.endDate);
       if(tmpTime.getFullYear() == startDate.getFullYear()&&tmpTime.getMonth() == startDate.getMonth()&&tmpTime.getDate() == startDate.getDate()){
         // 勤務時間
         workTime += (endDate - startDate) / 1000 / 60;
@@ -293,7 +343,6 @@ function changeExcel(folderName, fileName){
 
   var getUrl = newFile.getDownloadUrl();
 }
-
 
 function showDownloadDialog() {
   var htmlOutput = HtmlService.createHtmlOutputFromFile('Download')

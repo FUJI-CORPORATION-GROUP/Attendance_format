@@ -1,11 +1,13 @@
+// 人の情報を埋め込みます
+const parsonalContents = [
+  {allSheetName: "タガALL", excelFileName: "_田賀康平_06663"},
+  {allSheetName: "ミナリALL", excelFileName: "_實成翔_06664"},
+]
 
-
-function makeSheet(start,end){
-  // start = "2024/02/11 17:00:00"
-  // end = "2024/03/11 17:00:00"
+function makeSheet(start,end,allSheetName){
   start = new Date(start)
   end = new Date(end)
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(allSheetName);
   var tableRange = sheet.getDataRange(); // テーブルの最初のセル
 
   var cells = tableRange.getValues();
@@ -70,9 +72,6 @@ function makeSheet(start,end){
 
   makeDetailSheet(modifiedAttendances);
   makeSumSheet(start,end,modifiedAttendances)
-
-
-  exportAttendanceRecordFile();
 
 }
 
@@ -149,7 +148,7 @@ function makeDetailSheet(attendances){
 
 }
 
-
+// 合計シート作成
 function makeSumSheet(start,end, attendances){
   var sheetName = "合計";
   clearSheet(sheetName)
@@ -222,6 +221,7 @@ function makeSumSheet(start,end, attendances){
 
 }
 
+// シートを空にする
 function clearSheet(sheetName){
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   const lastRow = sheet.getLastRow();
@@ -231,7 +231,7 @@ function clearSheet(sheetName){
   }
 }
 
-
+// 出力ボタン呼び出し関数
 function showDatePickerDialog() {
   var htmlOutput = HtmlService.createHtmlOutputFromFile('datePicker')
       .setWidth(300)
@@ -242,28 +242,40 @@ function showDatePickerDialog() {
 }
 
 
-// 勤怠表生成メイン関数
-function exportAttendanceRecordFile(start, end){
-  var folderName = "出力勤怠表";
+// ParsonalContentsに登録している人の勤怠表を出力する
+function exportParsonalsAttendanceRecordFile(start, end){
+  var excelDataArr = [];
+  var date = new Date(start)
+  var firstFileName = "勤怠表_"  + date.getFullYear() + "" + String((date.getMonth() + 1)).padStart(2, '0'); 
+  for(parsonalContent of parsonalContents){
+    var fullFileName = firstFileName + parsonalContent.excelFileName
+    var data = exportAttendanceRecordFile(start, end, parsonalContent.allSheetName, fullFileName)
+    excelDataArr.push(data)
+  }
 
-  //TODO: ファイル名の決定
-  var sheet = SpreadsheetApp.getActiveSheet().getName()
-  var fileName = sheet + "_" + start
+  return excelDataArr
+}
+
+
+// 勤怠表生成メイン関数
+function exportAttendanceRecordFile(start, end, allSheetName,excelFileName){
+  var folderName = "出力勤怠表";
 
   // 合計・明細シート作成
   // TODO：UserIDに応じて2つ作る
-  makeSheet(start,end)
+  makeSheet(start,end,allSheetName)
 
   // 合計・明細シートをExcelに出力
   // TODO: UserIDに応じてそれぞれ作成
-  exportSheetToExcel(folderName, fileName)
+  exportSheetToExcel(folderName, excelFileName)
 
   // ダウンロードするために，データ取得
-  var data = downloadExcelFile(fileName)
+  var data = downloadExcelFile(excelFileName)
   return data
 }
 
 function exportSheetToExcel(folderName, fileName){
+  Logger.log("exportSheetToExcel")
   // TODO: UserIDに応じてそれぞれ作成
   exportNewSheet(folderName,fileName)
   // スプシからExcelファイルに変換
@@ -271,10 +283,6 @@ function exportSheetToExcel(folderName, fileName){
 }
 
 function exportNewSheet(folderName, fileName){
-  // Debug用
-  // var folderName = "出力勤怠表";
-  // var newFileName = "test"
-
   // 生成先のファイル
   const folder = DriveApp.getFoldersByName(folderName);
   const folderId = folder.next().getId()
@@ -290,9 +298,6 @@ function exportNewSheet(folderName, fileName){
   });
 
   var newSheet  = SpreadsheetApp.openById(newSheetFile.id);
-  Logger.log(newSheetFile.id)
-  Logger.log(newSheet.getId())
-
 
   // 新しいシートにコピー
   detailSheet.copyTo(newSheet);

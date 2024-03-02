@@ -31,39 +31,40 @@
         var startDate = document.getElementById("start-date").value;
         var endDate = document.getElementById("end-date").value;
 
-        google.script.run.makeSheet(startDate, endDate); // 開始日と終了日を関数に渡す
-        // google.script.host.close(); // ダイアログを閉じる
-
-        google.script.run.withSuccessHandler(downloadComplete).exportAttendanceRecordFile(startDate, endDate);
+        // 勤怠表生成関数呼び出し
+        // 返り血を受け取ったらdownloadComplete()を実行
+        google.script.run.withSuccessHandler(downloadComplete).exportParsonalsAttendanceRecordFile(startDate, endDate);
 
       }
-
+      
       function downloadExcel() {
         google.script.run.withSuccessHandler(downloadComplete).downloadExcelFile();
       }
 
-      // ダウンロードが完了した後の処理
-      function downloadComplete(data) {
+      // 送られてきたデータをもとにExcelデータをダウンロード
+      function downloadComplete(excelDataArr) {
         console.log("downloadComplete")
-        console.log(data)
-        var fileName = data.fileName;
-        var contentType = data.contentType;
-        var base64Data = data.base64Data;
-        
-        var byteCharacters = atob(base64Data);
-        var byteNumbers = new Array(byteCharacters.length);
-        for (var i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        for (data of excelDataArr){
+          console.log(data)
+          var fileName = data.fileName;
+          var contentType = data.contentType;
+          var base64Data = data.base64Data;
+          
+          var byteCharacters = atob(base64Data);
+          var byteNumbers = new Array(byteCharacters.length);
+          for (var i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          var byteArray = new Uint8Array(byteNumbers);
+          
+          var blob = new Blob([byteArray], {type: contentType});
+          var downloadLink = document.createElement('a');
+          downloadLink.href = window.URL.createObjectURL(blob);
+          downloadLink.download = fileName;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
         }
-        var byteArray = new Uint8Array(byteNumbers);
-        
-        var blob = new Blob([byteArray], {type: contentType});
-        var downloadLink = document.createElement('a');
-        downloadLink.href = window.URL.createObjectURL(blob);
-        downloadLink.download = fileName;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
 
         google.script.host.close(); // ダイアログを閉じる
 

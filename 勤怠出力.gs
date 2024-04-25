@@ -7,14 +7,22 @@ const parsonalContents = [
 function makeSheet(start,end,allSheetName){
   start = new Date(start)
   end = new Date(end)
+  // start = new Date("2024-03-11")
+  // end = new Date("2024-04-10")
+  start = new Date(start.setHours(1));
+  end=new Date(end.setHours(23))
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(allSheetName);
   var tableRange = sheet.getDataRange(); // テーブルの最初のセル
 
   var cells = tableRange.getValues();
   Logger.log(typeof(cells))
+  Logger.log(cells)
+  Logger.log(Utilities.formatDate(start, "JST", "MM/dd/hh:mm") + " - " + Utilities.formatDate(end, "JST", "MM/dd/hh:mm"))
   var attendances = [];
   for(cell of cells){
     var thedate = cell[0];
+      Logger.log("theDate:"+thedate)
+      Logger.log(start <= thedate  && thedate <= end)
     if(typeof(thedate) == "object"){
       // 期間内かどうかの判定
       if(start <= thedate  && thedate <= end){
@@ -26,6 +34,12 @@ function makeSheet(start,end,allSheetName){
       }
     }
   }
+
+  console.log("attendance");
+  console.log(attendance);
+
+  Logger.log("attendance")
+  Logger.log(attendances)
   
   // 勤怠表を修正する
   var modifiedAttendances  = [];
@@ -69,6 +83,8 @@ function makeSheet(start,end,allSheetName){
   modifiedAttendances = modifiedAttendances.sort(function(a,b){
     return (a.startDate > b.startDate) ? -1 : 1;
   })
+
+  Logger.log(modifiedAttendances)
 
   makeDetailSheet(modifiedAttendances);
   makeSumSheet(start,end,modifiedAttendances)

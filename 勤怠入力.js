@@ -1,3 +1,4 @@
+
 function roundDownTo15Minutes(date) {
   var minutes = date.getMinutes();
   var roundedMinutes = Math.floor(minutes / 15) * 15;

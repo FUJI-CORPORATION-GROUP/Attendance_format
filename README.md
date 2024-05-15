@@ -1,4 +1,4 @@
-## フジ住宅の勤怠フォーマット
+# フジ住宅の勤怠フォーマット
 
 - フジ住宅で使用している勤怠管理のフォーマットを作成するスクリプト
 - GAS を用いて Google スプレッドシート上で使用する
@@ -47,3 +47,64 @@
 
 - このスクリプトを使用するには、Google アカウントが必要です。
 - スクリプトの実行前に、Google Sheets とスクリプトが連携されていることを確認してください。
+
+## ローカルでの開発
+
+### Docker 立ち上げ
+
+```sh
+docker-compose build
+docker-compose up -d
+```
+
+### google API へのログイン
+
+```sh
+# コンテナ中入る
+docker-compose exec -it clasp /bin/bash
+
+# コンテナの中でログイン処理
+clasp login
+```
+
+実行結果で表示される URL を開く
+
+```bash
+root@~~/usr/src/app# clasp login
+Logging in globally…
+🔑 Authorize clasp by visiting this url:
+https://accounts.google.com/hogehoge
+```
+
+開かれた先で Google ログイン&許可して，
+リダイレクト先の localhost の URL をコピーする
+
+別コンソールを開き下記を実行
+
+```sh
+# コンテナの中入る
+docker-compose exec -it clasp /bin/bash
+
+# ブラウザでアクセスできなかったURLにコンテナの中からcurlでアクセス
+curl "{http://localhost:hogehoge}"
+```
+
+ログインできるはず！
+
+### Project の Clone
+
+普段触る AppScript の画面のサイドメニューの中からスクリプト ID をコピー
+
+コンテナの中で下記を実行
+
+```sh
+clasp clone {スクリプトID}
+```
+
+### 編集後
+
+コンテナの中で下記を実行
+
+```sh
+clasp push
+```

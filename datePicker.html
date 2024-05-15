@@ -1,63 +1,68 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <base target="_top">
+    <base target="_top" />
     <script>
       function selectDateRange() {
-        var startDate = document.getElementById("start-date").value;
-        var endDate = document.getElementById("end-date").value;
-        
-        if (startDate !== "" && endDate !== "") {
+        var startDate = document.getElementById('start-date').value;
+        var endDate = document.getElementById('end-date').value;
+
+        if (startDate !== '' && endDate !== '') {
           // 開始日と終了日が両方選択されている場合、ボタンを有効にする
-          document.getElementById("select-button").disabled = false;
+          document.getElementById('select-button').disabled = false;
         } else {
           // どちらか一方または両方が選択されていない場合、ボタンを無効にする
-          document.getElementById("select-button").disabled = true;
+          document.getElementById('select-button').disabled = true;
         }
       }
 
-      function setDate(){
-        var month = document.getElementById("month-selector").value;
+      function setDate() {
+        var month = document.getElementById('month-selector').value;
         var thisYear = new Date(Date.now()).getFullYear();
-        var start = new Date(thisYear, month-2,11)
-        var end = new Date(thisYear, month-1,10)
-        document.getElementById("start-date").value = start.toLocaleDateString('sv-SE');
-        document.getElementById("end-date").value = end.toLocaleDateString('sv-SE');
-        
-        document.getElementById("select-button").disabled = false;
+        var start = new Date(thisYear, month - 2, 11);
+        var end = new Date(thisYear, month - 1, 10);
+        document.getElementById('start-date').value =
+          start.toLocaleDateString('sv-SE');
+        document.getElementById('end-date').value =
+          end.toLocaleDateString('sv-SE');
+
+        document.getElementById('select-button').disabled = false;
       }
 
-      function sendDate(){
-        var startDate = document.getElementById("start-date").value;
-        var endDate = document.getElementById("end-date").value;
+      function sendDate() {
+        var startDate = document.getElementById('start-date').value;
+        var endDate = document.getElementById('end-date').value;
 
         // 勤怠表生成関数呼び出し
         // 返り血を受け取ったらdownloadComplete()を実行
-        google.script.run.withSuccessHandler(downloadComplete).exportParsonalsAttendanceRecordFile(startDate, endDate);
-
+        google.script.run
+          .withSuccessHandler(downloadComplete)
+          .exportParsonalsAttendanceRecordFile(startDate, endDate);
       }
-      
+
       function downloadExcel() {
-        google.script.run.withSuccessHandler(downloadComplete).downloadExcelFile();
+        google.script.run
+          .withSuccessHandler(downloadComplete)
+          .downloadExcelFile();
       }
 
       // 送られてきたデータをもとにExcelデータをダウンロード
       function downloadComplete(excelDataArr) {
-        console.log("downloadComplete")
-        for (data of excelDataArr){
-          console.log(data)
+        console.log('downloadComplete');
+        for (data of excelDataArr) {
+          console.log(data);
           var fileName = data.fileName;
           var contentType = data.contentType;
           var base64Data = data.base64Data;
-          
+
           var byteCharacters = atob(base64Data);
           var byteNumbers = new Array(byteCharacters.length);
           for (var i = 0; i < byteCharacters.length; i++) {
             byteNumbers[i] = byteCharacters.charCodeAt(i);
           }
           var byteArray = new Uint8Array(byteNumbers);
-          
-          var blob = new Blob([byteArray], {type: contentType});
+
+          var blob = new Blob([byteArray], { type: contentType });
           var downloadLink = document.createElement('a');
           downloadLink.href = window.URL.createObjectURL(blob);
           downloadLink.download = fileName;
@@ -67,36 +72,32 @@
         }
 
         google.script.host.close(); // ダイアログを閉じる
-
       }
-
-
     </script>
   </head>
   <body>
-      <label for="month-selector">月を選択:</label>
-      <select id="month-selector" oninput="setDate()">
-        <option value="1">1月</option>
-        <option value="2">2月</option>
-        <option value="3">3月</option>
-        <option value="4">4月</option>
-        <option value="5">5月</option>
-        <option value="6">6月</option>
-        <option value="7">7月</option>
-        <option value="8">8月</option>
-        <option value="9">9月</option>
-        <option value="10">10月</option>
-        <option value="11">11月</option>
-        <option value="12">12月</option>
+    <label for="month-selector">月を選択:</label>
+    <select id="month-selector" oninput="setDate()">
+      <option value="1">1月</option>
+      <option value="2">2月</option>
+      <option value="3">3月</option>
+      <option value="4">4月</option>
+      <option value="5">5月</option>
+      <option value="6">6月</option>
+      <option value="7">7月</option>
+      <option value="8">8月</option>
+      <option value="9">9月</option>
+      <option value="10">10月</option>
+      <option value="11">11月</option>
+      <option value="12">12月</option>
     </select>
-    <br>
+    <br />
     <label for="start-date">開始日:</label>
-    <input type="date" id="start-date" oninput="selectDateRange()">
-    <br>
+    <input type="date" id="start-date" oninput="selectDateRange()" />
+    <br />
     <label for="end-date">終了日:</label>
-    <input type="date" id="end-date" oninput="selectDateRange()">
-    <br>
+    <input type="date" id="end-date" oninput="selectDateRange()" />
+    <br />
     <button id="select-button" onclick="sendDate()" disabled>出力</button>
-
   </body>
 </html>

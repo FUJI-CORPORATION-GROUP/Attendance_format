@@ -13,3 +13,4 @@ coverage
 node_modules
 tmp
 .clasp.json
+root/*

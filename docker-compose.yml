@@ -6,3 +6,4 @@ services:
     stdin_open: true
     volumes:
       - ./:/usr/src/app
+      - ./root:/root

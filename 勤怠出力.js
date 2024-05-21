@@ -1,117 +1,152 @@
 // 人の情報を埋め込みます
 const parsonalContents = [
-  {allSheetName: "タガALL", excelFileName: "_田賀康平_06663"},
-  {allSheetName: "ミナリALL", excelFileName: "_實成翔_06664"},
-]
+  { allSheetName: 'タガALL', excelFileName: '_田賀康平_06663' },
+  { allSheetName: 'ミナリALL', excelFileName: '_實成翔_06664' },
+];
 
-function makeSheet(start,end,allSheetName){
-  start = new Date(start)
-  end = new Date(end)
+function makeSheet(start, end, allSheetName) {
+  start = new Date(start);
+  end = new Date(end);
   // start = new Date("2024-03-11")
   // end = new Date("2024-04-10")
   start = new Date(start.setHours(1));
-  end=new Date(end.setHours(23))
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(allSheetName);
+  end = new Date(end.setHours(23));
+  var sheet =
+    SpreadsheetApp.getActiveSpreadsheet().getSheetByName(allSheetName);
   var tableRange = sheet.getDataRange(); // テーブルの最初のセル
 
   var cells = tableRange.getValues();
-  Logger.log(typeof(cells))
-  Logger.log(cells)
-  Logger.log(Utilities.formatDate(start, "JST", "MM/dd/hh:mm") + " - " + Utilities.formatDate(end, "JST", "MM/dd/hh:mm"))
+  Logger.log(typeof cells);
+  Logger.log(cells);
+  Logger.log(
+    Utilities.formatDate(start, 'JST', 'MM/dd/hh:mm') +
+      ' - ' +
+      Utilities.formatDate(end, 'JST', 'MM/dd/hh:mm')
+  );
   var attendances = [];
-  for(cell of cells){
+  for (cell of cells) {
     var thedate = cell[0];
-      Logger.log("theDate:"+thedate)
-      Logger.log(start <= thedate  && thedate <= end)
-    if(typeof(thedate) == "object"){
+    Logger.log('theDate:' + thedate);
+    Logger.log(start <= thedate && thedate <= end);
+    if (typeof thedate == 'object') {
       // 期間内かどうかの判定
-      if(start <= thedate  && thedate <= end){
-        var attendance = {}
-        attendance.startDate = cell[0]
-        attendance.endDate = cell[1]
-        attendance.workContent = cell[2]
+      if (start <= thedate && thedate <= end) {
+        var attendance = {};
+        attendance.startDate = cell[0];
+        attendance.endDate = cell[1];
+        attendance.workContent = cell[2];
         attendances.push(attendance);
       }
     }
   }
 
-  console.log("attendance");
+  console.log('attendance');
   console.log(attendance);
 
-  Logger.log("attendance")
-  Logger.log(attendances)
-  
+  Logger.log('attendance');
+  Logger.log(attendances);
+
   // 勤怠表を修正する
-  var modifiedAttendances  = [];
-  for(attendance of attendances){
-    var theStartDate = attendance.startDate
-    var theEndDate = attendance.endDate
+  var modifiedAttendances = [];
+  for (attendance of attendances) {
+    var theStartDate = attendance.startDate;
+    var theEndDate = attendance.endDate;
     // 日数の計算
-    var diffDay = Math.abs(new Date(theEndDate).setHours(0,0,0,0) - new Date(theStartDate).setHours(0,0,0,0)) / 1000 / 60 / 60 / 24;
+    var diffDay =
+      Math.abs(
+        new Date(theEndDate).setHours(0, 0, 0, 0) -
+          new Date(theStartDate).setHours(0, 0, 0, 0)
+      ) /
+      1000 /
+      60 /
+      60 /
+      24;
 
     // 日をまたいでいた時の処理
-    if(diffDay >= 1){
-      for(var i = 0;i <= diffDay;i++){
-        var theDate = new Date(theStartDate).setDate(theStartDate.getDate()+  i)
-        var theModifiedAttendance = Object.assign({},attendance);
-        if(i == 0){
+    if (diffDay >= 1) {
+      for (var i = 0; i <= diffDay; i++) {
+        var theDate = new Date(theStartDate).setDate(
+          theStartDate.getDate() + i
+        );
+        var theModifiedAttendance = Object.assign({}, attendance);
+        if (i == 0) {
           // startDate = startDate
           theModifiedAttendance.startDate = new Date(attendance.startDate);
           // endDate = 23:45
-          theModifiedAttendance.endDate = new Date(theDate).setHours(23, 45, 0, 0)
-        }else if(i == diffDay){
+          theModifiedAttendance.endDate = new Date(theDate).setHours(
+            23,
+            45,
+            0,
+            0
+          );
+        } else if (i == diffDay) {
           // startDate = 0:00
-          theModifiedAttendance.startDate = new Date(theDate).setHours(0, 0, 0, 0)
+          theModifiedAttendance.startDate = new Date(theDate).setHours(
+            0,
+            0,
+            0,
+            0
+          );
           // endDate = endDate
-          theModifiedAttendance.endDate = new Date(attendance.endDate).setMinutes(attendance.endDate.getMinutes() + 15*diffDay);
-        }else{
+          theModifiedAttendance.endDate = new Date(
+            attendance.endDate
+          ).setMinutes(attendance.endDate.getMinutes() + 15 * diffDay);
+        } else {
           // startDate = 0:00
-          theModifiedAttendance.startDate = new Date(theDate).setHours(0, 0, 0, 0)
+          theModifiedAttendance.startDate = new Date(theDate).setHours(
+            0,
+            0,
+            0,
+            0
+          );
           // endDate = 23:45
-          theModifiedAttendance.endDate = new Date(theDate).setHours(23, 45, 0, 0)
+          theModifiedAttendance.endDate = new Date(theDate).setHours(
+            23,
+            45,
+            0,
+            0
+          );
         }
-        modifiedAttendances.push(theModifiedAttendance)
+        modifiedAttendances.push(theModifiedAttendance);
       }
-      
-    }else{
-
-      modifiedAttendances.push(attendance)
+    } else {
+      modifiedAttendances.push(attendance);
     }
   }
 
   // 日付によるソート
-  modifiedAttendances = modifiedAttendances.sort(function(a,b){
-    return (a.startDate > b.startDate) ? -1 : 1;
-  })
+  modifiedAttendances = modifiedAttendances.sort(function (a, b) {
+    return a.startDate > b.startDate ? -1 : 1;
+  });
 
-  Logger.log(modifiedAttendances)
+  Logger.log(modifiedAttendances);
 
   makeDetailSheet(modifiedAttendances);
-  makeSumSheet(start,end,modifiedAttendances)
-
+  makeSumSheet(start, end, modifiedAttendances);
 }
 
-function makeDetailSheet(attendances){
-  Logger.log("makeDetailSheet");
+function makeDetailSheet(attendances) {
+  Logger.log('makeDetailSheet');
 
-  var sheetName = "明細";
-  clearSheet(sheetName)
-  var detailSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+  var sheetName = '明細';
+  clearSheet(sheetName);
+  var detailSheet =
+    SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   var tableRange = detailSheet.getRange('A3'); // テーブルの最初のセル
 
-  console.log(attendances)
+  console.log(attendances);
   attendances.reverse();
-  console.log(attendances)
-  
+  console.log(attendances);
+
   var allWorkTime = 0;
-  for(attendance of attendances){
+  for (attendance of attendances) {
     var startDate = new Date(attendance.startDate);
     var endDate = new Date(attendance.endDate);
 
     //月
     var month = startDate.getMonth() + 1;
     var monthRange = tableRange;
-    monthRange.setValue(month)
+    monthRange.setValue(month);
 
     //日付
     var day = startDate.getDate();
@@ -119,7 +154,7 @@ function makeDetailSheet(attendances){
     dayRange.setValue(day);
 
     //曜日
-    var dateJa = ["日","月","火","水","木","金","土"];
+    var dateJa = ['日', '月', '火', '水', '木', '金', '土'];
     var date = dateJa[startDate.getDay()];
     var dateRange = tableRange.offset(0, 2);
     dateRange.setValue(date);
@@ -132,7 +167,7 @@ function makeDetailSheet(attendances){
     var startMinutes = startDate.getMinutes();
     var startMinutesRange = tableRange.offset(0, 4);
     startMinutesRange.setValue(startMinutes);
-    
+
     // 終了時間
     var endHour = endDate.getHours();
     var endHourRange = tableRange.offset(0, 5);
@@ -158,28 +193,28 @@ function makeDetailSheet(attendances){
 
   //合計の出力
   allWorkTimeLabelRange = tableRange.offset(0, 6);
-  allWorkTimeLabelRange.setValue("合計");
+  allWorkTimeLabelRange.setValue('合計');
   allWorkTimeRange = tableRange.offset(0, 7);
   allWorkTimeRange.setValue(allWorkTime);
-
 }
 
 // 合計シート作成
-function makeSumSheet(start,end, attendances){
-  var sheetName = "合計";
-  clearSheet(sheetName)
-  var sumSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+function makeSumSheet(start, end, attendances) {
+  var sheetName = '合計';
+  clearSheet(sheetName);
+  var sumSheet =
+    SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   var tableRange = sumSheet.getRange('A3'); // テーブルの最初のセル
 
   //　start ~ end の日付・土曜日
   var tmpTime = new Date(start);
   var allWorkTime = 0;
 
-  while(tmpTime <= end){
+  while (tmpTime <= end) {
     //月
     var month = tmpTime.getMonth() + 1;
     var monthRange = tableRange;
-    monthRange.setValue(month)
+    monthRange.setValue(month);
 
     //日付
     var day = tmpTime.getDate();
@@ -187,24 +222,28 @@ function makeSumSheet(start,end, attendances){
     dayRange.setValue(day);
 
     //曜日
-    var dateJa = ["日","月","火","水","木","金","土"];
+    var dateJa = ['日', '月', '火', '水', '木', '金', '土'];
     var date = dateJa[tmpTime.getDay()];
     var dateRange = tableRange.offset(0, 2);
     dateRange.setValue(date);
 
     //tmpTimeが同じ日時
     var workTime = 0;
-    for(attendance of attendances){
+    for (attendance of attendances) {
       var startDate = new Date(attendance.startDate);
       var endDate = new Date(attendance.endDate);
-      if(tmpTime.getFullYear() == startDate.getFullYear()&&tmpTime.getMonth() == startDate.getMonth()&&tmpTime.getDate() == startDate.getDate()){
+      if (
+        tmpTime.getFullYear() == startDate.getFullYear() &&
+        tmpTime.getMonth() == startDate.getMonth() &&
+        tmpTime.getDate() == startDate.getDate()
+      ) {
         // 勤務時間
         workTime += (endDate - startDate) / 1000 / 60;
       }
     }
     var workTimeRange = tableRange.offset(0, 5);
     workTimeRange.setValue(workTime);
-    allWorkTime += workTime
+    allWorkTime += workTime;
 
     var workTimeHour = Math.floor(workTime / 60);
     var workTimeHourRange = tableRange.offset(0, 3);
@@ -214,15 +253,13 @@ function makeSumSheet(start,end, attendances){
     var workTimeMinutesRange = tableRange.offset(0, 4);
     workTimeMinutesRange.setValue(workTimeMinutes);
 
-
-    tmpTime.setDate(tmpTime.getDate()+1)
+    tmpTime.setDate(tmpTime.getDate() + 1);
     tableRange = tableRange.offset(1, 0); // 一つ下のセルに移動
   }
 
-
   // 合計の表示
   allWorkTimeLabelRange = tableRange.offset(0, 2);
-  allWorkTimeLabelRange.setValue("合計");
+  allWorkTimeLabelRange.setValue('合計');
 
   var allWorkTimeRange = tableRange.offset(0, 5);
   allWorkTimeRange.setValue(allWorkTime);
@@ -234,103 +271,108 @@ function makeSumSheet(start,end, attendances){
   var allWorkTimeMinutes = allWorkTime % 60;
   var allWorkTimeMinutesRange = tableRange.offset(0, 4);
   allWorkTimeMinutesRange.setValue(allWorkTimeMinutes);
-
 }
 
 // シートを空にする
-function clearSheet(sheetName){
+function clearSheet(sheetName) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   const lastRow = sheet.getLastRow();
   const lastColumn = sheet.getLastColumn();
-  for(var i = 2;i<lastColumn;i++){
-    sheet.getRange(3, 1, lastRow - 1,lastColumn).clearContent();
+  for (var i = 2; i < lastColumn; i++) {
+    sheet.getRange(3, 1, lastRow - 1, lastColumn).clearContent();
   }
 }
 
 // 出力ボタン呼び出し関数
 function showDatePickerDialog() {
   var htmlOutput = HtmlService.createHtmlOutputFromFile('datePicker')
-      .setWidth(300)
-      .setHeight(250);
-  
+    .setWidth(300)
+    .setHeight(250);
+
   SpreadsheetApp.getUi().showModalDialog(htmlOutput, '期間を選択');
-
 }
-
 
 // ParsonalContentsに登録している人の勤怠表を出力する
-function exportParsonalsAttendanceRecordFile(start, end){
+function exportParsonalsAttendanceRecordFile(start, end) {
   var excelDataArr = [];
-  var date = new Date(start)
-  var firstFileName = "勤怠表_"  + date.getFullYear() + "" + String((date.getMonth() + 1)).padStart(2, '0'); 
-  for(parsonalContent of parsonalContents){
-    var fullFileName = firstFileName + parsonalContent.excelFileName
-    var data = exportAttendanceRecordFile(start, end, parsonalContent.allSheetName, fullFileName)
-    excelDataArr.push(data)
+  var date = new Date(start);
+  var firstFileName =
+    '勤怠表_' +
+    date.getFullYear() +
+    '' +
+    String(date.getMonth() + 1).padStart(2, '0');
+  for (parsonalContent of parsonalContents) {
+    var fullFileName = firstFileName + parsonalContent.excelFileName;
+    var data = exportAttendanceRecordFile(
+      start,
+      end,
+      parsonalContent.allSheetName,
+      fullFileName
+    );
+    excelDataArr.push(data);
   }
 
-  return excelDataArr
+  return excelDataArr;
 }
 
-
 // 勤怠表生成メイン関数
-function exportAttendanceRecordFile(start, end, allSheetName,excelFileName){
-  var folderName = "出力勤怠表";
+function exportAttendanceRecordFile(start, end, allSheetName, excelFileName) {
+  var folderName = '出力勤怠表';
 
   // 合計・明細シート作成
   // TODO：UserIDに応じて2つ作る
-  makeSheet(start,end,allSheetName)
+  makeSheet(start, end, allSheetName);
 
   // 合計・明細シートをExcelに出力
   // TODO: UserIDに応じてそれぞれ作成
-  exportSheetToExcel(folderName, excelFileName)
+  exportSheetToExcel(folderName, excelFileName);
 
   // ダウンロードするために，データ取得
-  var data = downloadExcelFile(excelFileName)
-  return data
+  var data = downloadExcelFile(excelFileName);
+  return data;
 }
 
-function exportSheetToExcel(folderName, fileName){
-  Logger.log("exportSheetToExcel")
+function exportSheetToExcel(folderName, fileName) {
+  Logger.log('exportSheetToExcel');
   // TODO: UserIDに応じてそれぞれ作成
-  exportNewSheet(folderName,fileName)
+  exportNewSheet(folderName, fileName);
   // スプシからExcelファイルに変換
-  changeExcel(folderName,fileName)
+  changeExcel(folderName, fileName);
 }
 
-function exportNewSheet(folderName, fileName){
+function exportNewSheet(folderName, fileName) {
   // 生成先のファイル
   const folder = DriveApp.getFoldersByName(folderName);
-  const folderId = folder.next().getId()
+  const folderId = folder.next().getId();
 
   var spreadSheet = SpreadsheetApp.getActiveSpreadsheet();
   var detailSheet = spreadSheet.getSheetByName('明細');
-  var sumSheet = spreadSheet.getSheetByName("合計")
-  
+  var sumSheet = spreadSheet.getSheetByName('合計');
+
   var newSheetFile = Drive.Files.create({
-    "name":   fileName,
-    "mimeType": "application/vnd.google-apps.spreadsheet",
-    "parents":  [folderId]
+    name: fileName,
+    mimeType: 'application/vnd.google-apps.spreadsheet',
+    parents: [folderId],
   });
 
-  var newSheet  = SpreadsheetApp.openById(newSheetFile.id);
+  var newSheet = SpreadsheetApp.openById(newSheetFile.id);
 
   // 新しいシートにコピー
   detailSheet.copyTo(newSheet);
   sumSheet.copyTo(newSheet);
 
   // シート名変更
-  let exportDetailSheet  = newSheet.getSheetByName('明細 のコピー');
-  let exportSumSheet  = newSheet.getSheetByName('合計 のコピー');
+  let exportDetailSheet = newSheet.getSheetByName('明細 のコピー');
+  let exportSumSheet = newSheet.getSheetByName('合計 のコピー');
   exportDetailSheet.setName('明細');
   exportSumSheet.setName('合計');
 
   // 無駄なシート削除
-  let deleteSheet  = newSheet.getSheets();
+  let deleteSheet = newSheet.getSheets();
   newSheet.deleteSheet(deleteSheet[0]);
 }
 
-function changeExcel(folderName, fileName){
+function changeExcel(folderName, fileName) {
   // Debug用
   // var folderName = "出力勤怠表";
   // var newFileName = "test"
@@ -339,26 +381,27 @@ function changeExcel(folderName, fileName){
   var file = DriveApp.getFilesByName(fileName).next();
   var fileId = file.getId();
 
-  var url = "https://docs.google.com/spreadsheets/d/" + fileId + "/export?format=xlsx";
+  var url =
+    'https://docs.google.com/spreadsheets/d/' + fileId + '/export?format=xlsx';
 
   //urlfetchする際のoptionsを宣言
   var options = {
-    method:"get",
-    headers:{"Authorization":"Bearer " + ScriptApp.getOAuthToken()}, 
-  }
+    method: 'get',
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+  };
 
   //urlfetch
-  var response = UrlFetchApp.fetch(url,options);
-  
+  var response = UrlFetchApp.fetch(url, options);
+
   //urlfetchのレスポンスをblobクラスとして取得
   var blob = response.getBlob();
 
   //取得したblobクラスから新規ファイルを生成
   var newFile = DriveApp.createFile(blob);
-  
+
   //作成したファイルの名前を変更
   newFile.setName(fileName);
-  
+
   //作成したファイルを格納フォルダに移動
   newFile.moveTo(folder);
 
@@ -367,9 +410,9 @@ function changeExcel(folderName, fileName){
 
 function showDownloadDialog() {
   var htmlOutput = HtmlService.createHtmlOutputFromFile('Download')
-      .setWidth(300)
-      .setHeight(250);
-  
+    .setWidth(300)
+    .setHeight(250);
+
   SpreadsheetApp.getUi().showModalDialog(htmlOutput, 'Excel出力');
 }
 
@@ -379,10 +422,10 @@ function downloadExcelFile(fileName) {
   var data = Utilities.base64Encode(blob.getBytes());
   var contentType = blob.getContentType();
   var fileName = file.getName();
-  
+
   return {
     fileName: fileName,
     contentType: contentType,
-    base64Data: data
+    base64Data: data,
   };
 }
